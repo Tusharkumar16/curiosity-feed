@@ -1,7 +1,7 @@
 from googleapiclient.discovery import build
 
 # Put your YouTube API key here
-YOUTUBE_API_KEY = "AIzaSyDStOqH49P1xfJOgNzVZ_PrNnVXqBFGUHI"
+YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
 
 youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
