@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curiosity Feed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .upload-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 60px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: #f7f7ff;
+            border-color: #764ba2;
+        }
+        
+        .upload-area.dragging {
+            background: #f0f0ff;
+            border-color: #667eea;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .keywords {
+            background: #f7f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .keywords h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .wiki-summary {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .wiki-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .video-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .video-item:last-child {
+            border-bottom: none;
+        }
+        
+        .video-title {
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .video-channel {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .video-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .reset-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s;
+        }
+        
+        .reset-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Curiosity Feed</h1>
+            <p>Upload an image and explore what you're curious about</p>
+        </div>
+        
+        <div class="upload-box" id="uploadBox">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Drop an image or click to browse</div>
+                <div class="upload-subtext">Supports JPG, PNG, GIF, WebP</div>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div>Analyzing your curiosity...</div>
+            </div>
+        </div>
+        
+        <div class="results" id="results"></div>
+    </div>
+    
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBox = document.getElementById('uploadBox');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+        
+        async function handleFile(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Show loading
+            uploadArea.style.display = 'none';
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            try {
+                const response = await fetch('/explore', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    resetUpload();
+                    return;
+                }
+                
+                displayResults(data);
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+                resetUpload();
+            }
+        }
+        
+        function displayResults(data) {
+            loading.style.display = 'none';
+            results.style.display = 'block';
+            
+            let html = `
+                <div class="keywords">
+                    <h3>💡 You're curious about:</h3>
+                    <p>${data.keywords}</p>
+                </div>
+            `;
+            
+            if (data.wikipedia) {
+                html += `
+                    <div class="section">
+                        <h2>📚 Quick Facts</h2>
+                        <h3>${data.wikipedia.title}</h3>
+                        <p class="wiki-summary">${data.wikipedia.summary}</p>
+                        <a href="${data.wikipedia.url}" target="_blank" class="wiki-link">Read more on Wikipedia →</a>
+                    </div>
+                `;
+            }
+            
+            if (data.videos && data.videos.length > 0) {
+                html += `
+                    <div class="section">
+                        <h2>🎥 Watch & Learn</h2>
+                `;
+                
+                data.videos.forEach(video => {
+                    html += `
+                        <div class="video-item">
+                            <div class="video-title">${video.title}</div>
+                            <div class="video-channel">by ${video.channel}</div>
+                            <a href="${video.url}" target="_blank" class="video-link">Watch on YouTube →</a>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            html += `<button class="reset-btn" onclick="resetUpload()">Explore Something Else</button>`;
+            
+            results.innerHTML = html;
+        }
+        
+        function resetUpload() {
+            uploadArea.style.display = 'block';
+            loading.style.display = 'none';
+            results.style.display = 'none';
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
+
