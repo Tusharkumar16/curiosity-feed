@@ -42,7 +42,7 @@ def is_safe_content(title, description=""):
     return True
 
 def analyze_image(image_path):
-    """Step 1: Understand what the user is curious about - IMPROVED CONTEXT"""
+    """Step 1: Understand EVERYTHING the user might be curious about"""
     print("🔍 Analyzing image...", end=" ", flush=True)
     
     with open(image_path, "rb") as f:
@@ -59,26 +59,35 @@ def analyze_image(image_path):
                 },
                 {
                     "type": "text",
-                    "text": """Look at this image carefully. What is the PRIMARY subject or activity that someone would want to learn about?
+                    "text": """Analyze EVERYTHING in this image and identify multiple distinct topics someone might be curious about:
 
-IMPORTANT: Focus on the main activity/concept, not just visible objects.
-- If you see soccer shoes and a ball → "soccer sport, football tactics" (not just "soccer cleats")
-- If you see guitar strings → "guitar playing, music" (not just "guitar strings")
-- If you see cooking tools → "cooking techniques, recipes" (not just "kitchen utensils")
+1. Main Subject: What/who is the primary focus?
+2. Setting/Location: Where might this be? Any recognizable places?
+3. Context: What might this be from? (movie, TV show, music video, event, advertisement, etc.)
+4. People: Any recognizable people, celebrities, or characters?
+5. Text/Logos: Any visible text, brand names, or logos?
+6. Style/Aesthetic: Notable visual characteristics, art style, or cinematography?
+7. Objects/Details: Other interesting elements worth exploring?
 
-Be specific and add educational context:
-- "iPhone smartphone, iOS features, mobile technology" 
-- "soccer sport, football tactics, athletic training"
-- "burger recipe, American cuisine, grilling techniques"
+Return 5-8 specific, searchable keywords covering DIFFERENT aspects of the image, comma separated.
 
-Return 3-5 educational keywords with context, comma separated.
-Focus on what someone would want to LEARN, not just identify.
+IMPORTANT: 
+- Focus on proper nouns (names, places, titles, brands) when identifiable
+- Include context clues (e.g., "movie scene", "concert footage", "music video")
+- Be specific, not generic (e.g., "Times Square New York" not just "city")
+- If you see multiple interesting elements, include them all
 
-Just the keywords, nothing else."""
+Examples:
+- Movie scene → "Actor Name, Movie Title, filming location, director name, cinematography style"
+- Music video → "Artist name, song title, music video, dance choreography, visual effects"
+- Food → "Dish name, cuisine type, restaurant name, plating technique, culinary style"
+- Architecture → "Building name, architectural style, architect name, city location, historical period"
+
+Just the keywords, comma separated, nothing else."""
                 }
             ]
         }],
-        max_tokens=150
+        max_tokens=200
     )
     
     keywords = response.choices[0].message.content.strip()
